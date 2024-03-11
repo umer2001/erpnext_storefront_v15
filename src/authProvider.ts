@@ -1,26 +1,38 @@
 import { AuthBindings } from "@refinedev/core";
+import { auth } from "./client/api";
 
 export const TOKEN_KEY = "refine-auth";
 
 export const authProvider: AuthBindings = {
   login: async ({ username, email, password }) => {
-    if ((username || email) && password) {
-      localStorage.setItem(TOKEN_KEY, username);
+    try {
+      const res = await auth.login({ usr: username ?? email, pwd: password });
+      if (res.full_name) {
+        localStorage.setItem(TOKEN_KEY, username ?? email);
+        return {
+          success: true,
+          redirectTo: "/",
+        };
+      }
       return {
-        success: true,
-        redirectTo: "/",
+        success: false,
+        error: {
+          name: "LoginError",
+          message: "Invalid username or password",
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: {
+          name: "LoginError",
+          message: "Invalid username or password",
+        },
       };
     }
-
-    return {
-      success: false,
-      error: {
-        name: "LoginError",
-        message: "Invalid username or password",
-      },
-    };
   },
   logout: async () => {
+    await auth.logout();
     localStorage.removeItem(TOKEN_KEY);
     return {
       success: true,
@@ -44,11 +56,7 @@ export const authProvider: AuthBindings = {
   getIdentity: async () => {
     const token = localStorage.getItem(TOKEN_KEY);
     if (token) {
-      return {
-        id: 1,
-        name: "John Doe",
-        avatar: "https://i.pravatar.cc/300",
-      };
+      return await auth.whoami();
     }
     return null;
   },
