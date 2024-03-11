@@ -1,12 +1,6 @@
-import {
-  Authenticated,
-  ErrorComponent,
-  GitHubBanner,
-  Refine,
-} from "@refinedev/core";
+import { Authenticated, ErrorComponent, Refine } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
-
 import routerBindings, {
   CatchAllNavigate,
   DocumentTitleHandler,
@@ -33,17 +27,30 @@ import {
 import { ForgotPassword } from "./pages/forgotPassword";
 import { Login } from "./pages/login";
 import { Register } from "./pages/register";
+import { useTranslation } from "react-i18next";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { notificationProvider } from "./providers/notificationProvider";
 
 function App() {
+  const { t, i18n } = useTranslation();
+
+  const i18nProvider = {
+    translate: (key: string, params: Record<string, string>) => t(key, params),
+    changeLocale: (lang: string) => i18n.changeLanguage(lang),
+    getLocale: () => i18n.language,
+  };
+
   return (
     <BrowserRouter>
-      <GitHubBanner />
       <RefineKbarProvider>
         <DevtoolsProvider>
           <Refine
             dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
+            i18nProvider={i18nProvider}
             routerProvider={routerBindings}
             authProvider={authProvider}
+            notificationProvider={notificationProvider}
             resources={[
               {
                 name: "blog_posts",
@@ -74,11 +81,12 @@ function App() {
             }}
           >
             <Routes>
+              <Route index element={<h1>Catalog</h1>} />
               <Route
                 element={
                   <Authenticated
                     key="authenticated-inner"
-                    fallback={<CatchAllNavigate to="/login" />}
+                    fallback={<CatchAllNavigate to="/" />}
                   >
                     <Layout>
                       <Outlet />
@@ -123,6 +131,7 @@ function App() {
             <RefineKbar />
             <UnsavedChangesNotifier />
             <DocumentTitleHandler />
+            <ToastContainer />
           </Refine>
           <DevtoolsPanel />
         </DevtoolsProvider>

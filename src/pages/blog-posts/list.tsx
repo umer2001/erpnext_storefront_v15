@@ -3,6 +3,7 @@ import {
   IResourceComponentsProps,
   useMany,
   useNavigation,
+  useTranslate,
 } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import { ColumnDef, flexRender } from "@tanstack/react-table";
@@ -98,6 +99,7 @@ export const BlogPostList: React.FC<IResourceComponentsProps> = () => {
   );
 
   const { edit, show, create } = useNavigation();
+  const t = useTranslate();
 
   const {
     getHeaderGroups,
@@ -145,7 +147,7 @@ export const BlogPostList: React.FC<IResourceComponentsProps> = () => {
         }}
       >
         <h1>{"List"}</h1>
-        <button onClick={() => create("blog_posts")}>{"Create"}</button>
+        <button onClick={() => create("blog_posts")}>{t("Create")}</button>
       </div>
       <div style={{ maxWidth: "100%", overflowY: "scroll" }}>
         <table>
