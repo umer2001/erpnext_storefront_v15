@@ -8,9 +8,10 @@ import routerBindings, {
   UnsavedChangesNotifier,
 } from "@refinedev/react-router-v6";
 import dataProvider from "@refinedev/simple-rest";
+import { type ClientParams } from "refine-frappe-provider";
+import { authProvider } from "./authProvider";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import "./App.css";
-import { authProvider } from "./authProvider";
 import { Layout } from "./components/layout";
 import {
   BlogPostCreate,
@@ -31,6 +32,22 @@ import { useTranslation } from "react-i18next";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { notificationProvider } from "./providers/notificationProvider";
+import { ProductList } from "./pages/products/list";
+import { storeProvider } from "./dataProviders/storeProvider";
+import {
+  dataProvider as frappeDataProvider,
+  authProvider as frappeAuthProvider,
+} from "refine-frappe-provider";
+import { AddressList } from "./pages/address/list";
+import { AddressCreate } from "./pages/address/create";
+import { AddressEdit } from "./pages/address/edit";
+import { CartProvider } from "./hooks/useCart";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { ProductShow } from "./pages/products/show";
+
+const providerConfig = {
+  url: import.meta.env.VITE_BACKEND_URL,
+} satisfies ClientParams;
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -46,10 +63,15 @@ function App() {
       <RefineKbarProvider>
         <DevtoolsProvider>
           <Refine
-            dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
+            dataProvider={{
+              default: dataProvider("https://api.fake-rest.refine.dev"),
+              storeProvider: storeProvider,
+              frappeeProvider: frappeDataProvider(providerConfig),
+            }}
             i18nProvider={i18nProvider}
             routerProvider={routerBindings}
             authProvider={authProvider}
+            // authProvider={frappeAuthProvider(providerConfig)}
             notificationProvider={notificationProvider}
             resources={[
               {
@@ -72,6 +94,25 @@ function App() {
                   canDelete: true,
                 },
               },
+              {
+                name: "address",
+                list: "/address",
+                create: "/address/create",
+                edit: "/address/edit/:id",
+                show: "/address/show/:id",
+                meta: {
+                  dataProviderName: "storeProvider",
+                  canDelete: true,
+                },
+              },
+              {
+                name: "products",
+                meta: {
+                  dataProviderName: "storeProvider",
+                },
+                list: "/",
+                show: "/show/:id",
+              },
             ]}
             options={{
               syncWithLocation: true,
@@ -80,58 +121,66 @@ function App() {
               projectId: "z8IRvt-f1kOr3-1a0UTY",
             }}
           >
-            <Routes>
-              <Route index element={<h1>Catalog</h1>} />
-              <Route
-                element={
-                  <Authenticated
-                    key="authenticated-inner"
-                    fallback={<CatchAllNavigate to="/" />}
-                  >
-                    <Layout>
-                      <Outlet />
-                    </Layout>
-                  </Authenticated>
-                }
-              >
+            <CartProvider>
+              <Routes>
+                <Route index element={<ProductList />} />
+                <Route path="/show/:id" element={<ProductShow />} />
                 <Route
-                  index
-                  element={<NavigateToResource resource="blog_posts" />}
-                />
-                <Route path="/blog-posts">
-                  <Route index element={<BlogPostList />} />
-                  <Route path="create" element={<BlogPostCreate />} />
-                  <Route path="edit/:id" element={<BlogPostEdit />} />
-                  <Route path="show/:id" element={<BlogPostShow />} />
+                  element={
+                    <Authenticated
+                      key="authenticated-inner"
+                      fallback={<CatchAllNavigate to="/login" />}
+                    >
+                      <Layout>
+                        <Outlet />
+                      </Layout>
+                    </Authenticated>
+                  }
+                >
+                  <Route
+                    index
+                    element={<NavigateToResource resource="blog_posts" />}
+                  />
+                  <Route path="/blog-posts">
+                    <Route index element={<BlogPostList />} />
+                    <Route path="create" element={<BlogPostCreate />} />
+                    <Route path="edit/:id" element={<BlogPostEdit />} />
+                    <Route path="show/:id" element={<BlogPostShow />} />
+                  </Route>
+                  <Route path="/categories">
+                    <Route index element={<CategoryList />} />
+                    <Route path="create" element={<CategoryCreate />} />
+                    <Route path="edit/:id" element={<CategoryEdit />} />
+                    <Route path="show/:id" element={<CategoryShow />} />
+                  </Route>
+                  <Route path="/address">
+                    <Route index element={<AddressList />} />
+                    <Route path="create" element={<AddressCreate />} />
+                    <Route path="edit/:id" element={<AddressEdit />} />
+                  </Route>
+                  <Route path="*" element={<ErrorComponent />} />
                 </Route>
-                <Route path="/categories">
-                  <Route index element={<CategoryList />} />
-                  <Route path="create" element={<CategoryCreate />} />
-                  <Route path="edit/:id" element={<CategoryEdit />} />
-                  <Route path="show/:id" element={<CategoryShow />} />
+                <Route
+                  element={
+                    <Authenticated
+                      key="authenticated-outer"
+                      fallback={<Outlet />}
+                    >
+                      <NavigateToResource />
+                    </Authenticated>
+                  }
+                >
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
                 </Route>
-                <Route path="*" element={<ErrorComponent />} />
-              </Route>
-              <Route
-                element={
-                  <Authenticated
-                    key="authenticated-outer"
-                    fallback={<Outlet />}
-                  >
-                    <NavigateToResource />
-                  </Authenticated>
-                }
-              >
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-              </Route>
-            </Routes>
-
+              </Routes>
+            </CartProvider>
             <RefineKbar />
             <UnsavedChangesNotifier />
             <DocumentTitleHandler />
             <ToastContainer />
+            <ReactQueryDevtools initialIsOpen={false} />
           </Refine>
           <DevtoolsPanel />
         </DevtoolsProvider>

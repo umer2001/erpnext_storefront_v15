@@ -6,20 +6,11 @@ export const TOKEN_KEY = "refine-auth";
 export const authProvider: AuthBindings = {
   login: async ({ username, email, password }) => {
     try {
-      const res = await auth.login({ usr: username ?? email, pwd: password });
-      if (res.full_name) {
-        localStorage.setItem(TOKEN_KEY, username ?? email);
-        return {
-          success: true,
-          redirectTo: "/",
-        };
-      }
+      await auth.login({ usr: username ?? email, pwd: password });
+      localStorage.setItem(TOKEN_KEY, username ?? email);
       return {
-        success: false,
-        error: {
-          name: "LoginError",
-          message: "Invalid username or password",
-        },
+        success: true,
+        redirectTo: "/",
       };
     } catch (error) {
       return {
