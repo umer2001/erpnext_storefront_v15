@@ -1,23 +1,33 @@
 import {
   IResourceComponentsProps,
   useNavigation,
+  useParsed,
   useTranslate,
 } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
-import { ColumnDef, flexRender } from "@tanstack/react-table";
-import React, { useMemo, useState } from "react";
-import CountrySelect from "../../components/CountrySelect";
-import StateSelect from "../../components/StateSelect";
-import CitySelect from "../../components/CitySelect";
-import Cart from "../../components/cart/Cart";
+import { ColumnDef } from "@tanstack/react-table";
+import React, { useCallback, useMemo } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { useCart } from "../../hooks/useCart";
+import ProductCard from "@/components/ProductCard";
+import { useParams } from "react-router-dom";
 
 export const ProductList: React.FC<IResourceComponentsProps> = () => {
-  const [location, setlocation] = useState({
-    country: "",
-    state: "",
-    city: "",
-  });
   const { addToCart, removeFromCart } = useCart();
   const columns = React.useMemo<ColumnDef<any>[]>(
     () => [
@@ -87,36 +97,42 @@ export const ProductList: React.FC<IResourceComponentsProps> = () => {
     []
   );
 
-  const { show, create } = useNavigation();
+  const { show } = useNavigation();
   const t = useTranslate();
 
   const {
-    getHeaderGroups,
-    getRowModel,
     setOptions,
-    setColumnFilters,
     refineCore: {
       tableQueryResult: { data: tableData },
     },
     getState,
     setPageIndex,
     getCanPreviousPage,
-    getPageCount,
     getCanNextPage,
     nextPage,
     previousPage,
-    setPageSize,
+    setColumnFilters,
   } = useTable({
     columns,
+    pageCount: 10,
     initialState: {
-      columnFilters: [
-        // {
-        //   id: "field_filters.item_code",
-        //   value: "lhcs3",
-        // },
-      ],
+      pagination: {
+        pageSize: 12,
+        pageIndex: undefined,
+      },
+      // columnFilters: [
+      //   // {
+      //   //   id: "item_group",
+      //   //   value: params?.categoryId,
+      //   // },
+      // ],
     },
   });
+
+  const getPageCount = useCallback(
+    () => Math.ceil((tableData?.total ?? 10) / getState().pagination.pageSize),
+    [tableData, getState().pagination.pageSize]
+  );
 
   setOptions((prev) => ({
     ...prev,
@@ -142,17 +158,13 @@ export const ProductList: React.FC<IResourceComponentsProps> = () => {
 
   return (
     <div style={{ padding: "16px" }}>
-      <Cart />
-      <h1>{"List"}</h1>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
+      <h1 className="text-3xl font-semibold text-center">
+        {t("All products")}
+      </h1>
+      <div className="flex justify-between items-center">
         <div>
-          Search
+          <strong>{t("All products")}</strong> ({tableData?.total})
+          {/* Search
           <input
             placeholder="Search by title"
             value={currentFilterValues.search}
@@ -164,139 +176,96 @@ export const ProductList: React.FC<IResourceComponentsProps> = () => {
                 },
               ]);
             }}
-          />
+          /> */}
         </div>
-        <button onClick={() => create("blog_posts")}>{t("Create")}</button>
+        <div className="flex items-center gap-4">
+          <strong>{t("Sort by")}</strong>
+          <Select>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Theme" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="light">{t("Default")}</SelectItem>
+              <SelectItem value="dark">{t("Price High to Low")}</SelectItem>
+              <SelectItem value="system">{t("Price Low to High")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      <div style={{ maxWidth: "100%", marginTop: "5%", overflowY: "scroll" }}>
-        <table>
-          <thead>
-            {getHeaderGroups().map((headerGroup) => (
-              <>
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <th key={header.id}>
-                      {!header.isPlaceholder &&
-                        flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                    </th>
-                  ))}
-                </tr>
-                <tr key={headerGroup.id + "x"}>
-                  {headerGroup.headers.map((header) => (
-                    <th key={header.id + "x"}>
-                      {header.column.getCanFilter() ? (
-                        <div>
-                          <input
-                            value={
-                              (header.column.getFilterValue() as string) ?? ""
-                            }
-                            onChange={(e) =>
-                              header.column.setFilterValue(e.target.value)
-                            }
-                          />
-                        </div>
-                      ) : null}
-                    </th>
-                  ))}
-                </tr>
-              </>
-            ))}
-          </thead>
-          <tbody>
-            {getRowModel().rows.map((row) => (
-              <tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div style={{ marginTop: "12px" }}>
-        <button
-          onClick={() => setPageIndex(0)}
-          disabled={!getCanPreviousPage()}
-        >
-          {"<<"}
-        </button>
-        <button onClick={() => previousPage()} disabled={!getCanPreviousPage()}>
-          {"<"}
-        </button>
-        <button onClick={() => nextPage()} disabled={!getCanNextPage()}>
-          {">"}
-        </button>
-        <button
-          onClick={() => setPageIndex(getPageCount() - 1)}
-          disabled={!getCanNextPage()}
-        >
-          {">>"}
-        </button>
-        <span>
-          <strong>
-            {" "}
-            {getState().pagination.pageIndex + 1} / {getPageCount()}{" "}
-          </strong>
-        </span>
-        <span>
-          | {"Go"}:{" "}
-          <input
-            type="number"
-            defaultValue={getState().pagination.pageIndex + 1}
-            onChange={(e) => {
-              const page = e.target.value ? Number(e.target.value) - 1 : 0;
-              setPageIndex(page);
-            }}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mx-1 my-4">
+        {tableData?.data.map((item) => (
+          <ProductCard
+            key={item.item_code}
+            itemCode={item.item_code}
+            name={item.item_name}
+            price={item.formatted_price}
+            image={item.website_image ?? "https://via.placeholder.com/341"}
+            width={341}
+            height={341}
           />
-        </span>{" "}
-        <select
-          value={getState().pagination.pageSize}
-          onChange={(e) => {
-            setPageSize(Number(e.target.value));
-          }}
-        >
-          {[10, 20].map((pageSize) => (
-            <option key={pageSize} value={pageSize}>
-              {"Show"} {pageSize}
-            </option>
-          ))}
-        </select>
+        ))}
       </div>
-      <div
-        style={{
-          marginTop: "12px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "12px",
-        }}
-      >
-        <h3>Dependent Location Example</h3>
-        <CountrySelect
-          name="country"
-          onChange={(country) =>
-            setlocation({ ...location, country: country.value })
+      <Pagination>
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              title="Previous Page"
+              onClick={() => previousPage()}
+              disabled={!getCanPreviousPage()}
+            />
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationLink
+              onClick={() => setPageIndex(0)}
+              disabled={!getCanPreviousPage()}
+            >
+              1
+            </PaginationLink>
+          </PaginationItem>
+          {getPageCount() > 4 && (
+            <PaginationItem>
+              <PaginationEllipsis />
+            </PaginationItem>
+          )}
+          {
+            // @ts-ignore
+            Array.from({
+              length: getPageCount() > 4 ? 4 : getPageCount() - 1,
+            }).map((_, index) => {
+              return (
+                <PaginationItem key={index}>
+                  <PaginationLink
+                    onClick={() =>
+                      setPageIndex(
+                        getPageCount() > 4
+                          ? getPageCount() - 4 + index
+                          : index + 1
+                      )
+                    }
+                    disabled={
+                      getState().pagination.pageIndex + 1 ===
+                      (getPageCount() > 4
+                        ? getPageCount() - 3 + index
+                        : index + 1)
+                    }
+                  >
+                    {getPageCount() > 4
+                      ? getPageCount() - 3 + index
+                      : index + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              );
+            })
           }
-          value={location.country}
-        />
-        <StateSelect
-          name="state"
-          onChange={(state) => setlocation({ ...location, state: state.value })}
-          value={location.state}
-          country={location.country}
-        />
-        <CitySelect
-          name="city"
-          onChange={(city) => setlocation({ ...location, city: city.value })}
-          value={location.city}
-          state={location.state}
-          country={location.country}
-        />
-      </div>
+          <PaginationItem>
+            <PaginationNext
+              onClick={() => nextPage()}
+              disabled={!getCanNextPage()}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
     </div>
   );
 };
