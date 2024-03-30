@@ -56,13 +56,16 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [cart, setCart] = useState<Record<string, number | undefined>>({});
   const [isOpen, _] = useState<boolean>(false);
   const [cartTotal, setCartTotal] = useState<number | "Loading">(0);
-  const cartCount: number = Object.keys(cart).length ?? 0;
+  const cartCount: number = Object.keys(cart).reduce(
+    (acc, cur) => acc + (cart[cur] ?? 0),
+    0
+  );
 
   const { isLoading, data: authState } = useIsAuthenticated();
   const queryClient = useQueryClient();
 
   const { data: serverCart, refetch: refreshServerCart } = useQuery({
-    queryKey: ["data", "storeProvider", "cart", "get", {}],
+    queryKey: ["data", "storeProvider", "cart", "list", {}],
     queryFn: serverSideCart.get,
     enabled: authState?.authenticated && !isLoading,
   });
@@ -71,7 +74,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     _debounce(
       (cart: Record<string, number | undefined>) =>
         serverSideCart.update(cart).then(() => refreshServerCart()),
-      500
+      3000
     ),
     []
   );
@@ -80,13 +83,29 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     const cart = localStorage.getItem("cart");
     if (cart && cart !== "{}") {
       setCart(JSON.parse(cart));
+    } else {
+      // fetch cart from server
+      console.log("fetching cart from server", localStorage.getItem("cart"));
+      refreshServerCart().then(({ data }) => {
+        setCart(
+          (data?.message?.doc.items ?? []).reduce(
+            (acc: Record<string, number>, cur: any) => {
+              acc[cur.item_code] = cur.qty;
+              return acc;
+            },
+            {} as Record<string, number>
+          )
+        );
+      });
     }
   }, []);
 
   useEffect(() => {
     setCartTotal("Loading");
     // sync cart state in local storage
-    localStorage.setItem("cart", JSON.stringify(cart));
+    if (Object.keys(cart).length) {
+      localStorage.setItem("cart", JSON.stringify(cart));
+    }
     // sync cart state in server
     if (authState?.authenticated) {
       syncCartToServer(cart);

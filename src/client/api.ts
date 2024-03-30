@@ -4,7 +4,11 @@ export const auth = {
   login: async ({ usr, pwd }: { usr: string; pwd: string }): Promise<any> =>
     api.post("/method/login", { usr, pwd }).then((res) => res.data),
   whoami: async (): Promise<any> =>
-    api.get("/method/frappe.auth.get_logged_user").then((res) => res.data),
+    api.get("/method/e_commerce_store.api.get_profile").then((res) => res.data),
+  updateProfile: async (data: any): Promise<any> =>
+    api
+      .post("/method/webshop.webshop.api.update_profile", data)
+      .then((res) => res.data),
   logout: async (): Promise<any> =>
     api.get("/method/logout").then((res) => res.data),
 };
@@ -31,9 +35,12 @@ export const products = {
 export const categories = {
   list: (params: any) =>
     api
-      .get("webshop.templates.pages.product_search.get_category_suggestions", {
-        params: params,
-      })
+      .get(
+        "method/webshop.templates.pages.product_search.get_category_suggestions",
+        {
+          params: { query: "", ...params },
+        }
+      )
       .then((res) => res.data),
   get: null,
   create: null,
@@ -54,8 +61,19 @@ export const address = {
         doc: data,
       })
       .then((res) => res.data),
-  get: null,
-  update: null,
+  update: (addressName: string, data: any) =>
+    api
+      .put("method/webshop.webshop.shopping_cart.cart.update_address", {
+        address_name: addressName,
+        address: data,
+      })
+      .then((res) => res.data),
+  get: (addressName: string) =>
+    api
+      .get("method/webshop.webshop.shopping_cart.cart.get_address", {
+        params: { address_name: addressName },
+      })
+      .then((res) => res.data),
   delete: null,
 };
 
@@ -70,25 +88,49 @@ export const cart = {
     api
       .post("method/webshop.webshop.api.update_cart", { cart })
       .then((res) => res.data),
+  applyShippingRule: (data: any) =>
+    api
+      .post(
+        "method/webshop.webshop.shopping_cart.cart.apply_shipping_rule",
+        data
+      )
+      .then((res) => res.data),
+  applyCouponCode: (data: any) =>
+    api
+      .post("method/webshop.webshop.shopping_cart.cart.apply_coupon_code", data)
+      .then((res) => res.data),
+  placeOrder: (data: any) =>
+    api
+      .post("method/webshop.webshop.shopping_cart.cart.place_order", data)
+      .then((res) => res.data),
+  updateCartAddress: (data: any) =>
+    api
+      .post(
+        "method/webshop.webshop.shopping_cart.cart.update_cart_address",
+        data
+      )
+      .then((res) => res.data),
   list: null,
   create: null,
   delete: null,
 };
 
 export const wishlist = {
-  list: (params: any) =>
+  list: (
+    username: string,
+    params: any = {
+      fields: ["items"],
+    }
+  ) =>
     api
-      .get("resource/Wishlist/Administrator", {
+      .get(`resource/Wishlist/${username}`, {
         params: params,
       })
       .then((res) => res.data),
-  update: (
-    action: "add_to_wishlist" | "remove_from_wishlist",
-    itemCode: string
-  ) =>
+  update: (itemCodes: string[]) =>
     api
-      .put(`method/webshop.webshop.doctype.wishlist.wishlist.${action}`, {
-        item_code: itemCode,
+      .put("method/webshop.webshop.api.update_wshlist", {
+        item_codes: itemCodes,
       })
       .then((res) => res.data),
   create: null,
@@ -99,4 +141,5 @@ export const wishlist = {
 export default {
   products,
   address,
+  categories,
 };

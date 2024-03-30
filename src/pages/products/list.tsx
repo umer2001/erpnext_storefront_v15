@@ -3,10 +3,9 @@ import {
   useNavigation,
   useParsed,
   useTranslate,
+  useTable,
 } from "@refinedev/core";
-import { useTable } from "@refinedev/react-table";
-import { ColumnDef } from "@tanstack/react-table";
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -25,136 +24,63 @@ import {
 } from "@/components/ui/pagination";
 import { useCart } from "../../hooks/useCart";
 import ProductCard from "@/components/ProductCard";
-import { useParams } from "react-router-dom";
 
 export const ProductList: React.FC<IResourceComponentsProps> = () => {
+  const {
+    params: { filters },
+  } = useParsed();
   const { addToCart, removeFromCart } = useCart();
-  const columns = React.useMemo<ColumnDef<any>[]>(
-    () => [
-      {
-        id: "id",
-        accessorKey: "item_code",
-        header: "ID",
-      },
-      {
-        id: "title",
-        accessorKey: "item_name",
-        header: "Title",
-      },
-      {
-        id: "field_filters.item_group",
-        accessorKey: "item_group",
-        header: "Item Group",
-        meta: {
-          filterOperator: "contains",
-        },
-      },
-      {
-        id: "price",
-        accessorKey: "price_list_rate",
-        header: "Price",
-      },
-      {
-        id: "actions",
-        header: "Actions",
-        accessorKey: "item_code",
-        cell: function render({ getValue }) {
-          return (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                flexWrap: "wrap",
-                gap: "4px",
-              }}
-            >
-              <button
-                onClick={() => {
-                  show("products", getValue() as string);
-                }}
-              >
-                Details
-              </button>
-              <button
-                onClick={() => {
-                  addToCart(getValue() as string);
-                }}
-              >
-                Add to cart
-              </button>
-              <button
-                onClick={() => {
-                  removeFromCart(getValue() as string);
-                }}
-              >
-                Remove from cart
-              </button>
-            </div>
-          );
-        },
-      },
-    ],
-    []
-  );
-
   const { show } = useNavigation();
   const t = useTranslate();
 
   const {
-    setOptions,
-    refineCore: {
-      tableQueryResult: { data: tableData },
-    },
-    getState,
-    setPageIndex,
-    getCanPreviousPage,
-    getCanNextPage,
-    nextPage,
-    previousPage,
-    setColumnFilters,
+    tableQueryResult: { data: tableData },
+    current,
+    setCurrent,
+    pageCount,
+    filters: appliedFilters,
+    setFilters,
   } = useTable({
-    columns,
-    pageCount: 10,
-    initialState: {
-      pagination: {
-        pageSize: 12,
-        pageIndex: undefined,
-      },
-      // columnFilters: [
-      //   // {
-      //   //   id: "item_group",
-      //   //   value: params?.categoryId,
-      //   // },
-      // ],
+    pagination: {
+      pageSize: 2,
     },
   });
 
-  const getPageCount = useCallback(
-    () => Math.ceil((tableData?.total ?? 10) / getState().pagination.pageSize),
-    [tableData, getState().pagination.pageSize]
+  const numberOfLastPageLinks = 4;
+
+  const getCanNextPage = useCallback(
+    () => current < pageCount,
+    [current, pageCount]
   );
 
-  setOptions((prev) => ({
-    ...prev,
-    meta: {
-      ...prev.meta,
-      productData: tableData?.data ?? [],
-    },
-  }));
+  const nextPage = useCallback(() => {
+    console.log({
+      current,
+      getPageCount: pageCount,
+    });
 
-  const currentFilterValues = useMemo(() => {
-    // Filters can be a LogicalFilter or a ConditionalFilter. ConditionalFilter not have field property. So we need to filter them.
-    // We use flatMap for better type support.
-    const logicalFilters = getState().columnFilters.flatMap((item) =>
-      "id" in item ? item : []
-    );
+    if (getCanNextPage()) {
+      setCurrent((prev) => prev + 1);
+    }
+  }, [getCanNextPage, setCurrent]);
 
-    return {
-      search:
-        (logicalFilters.find((item) => item.id === "search")
-          ?.value as string) ?? "",
-    };
-  }, [getState().columnFilters]);
+  const getCanPreviousPage = useCallback(() => current > 1, [current]);
+
+  const previousPage = useCallback(() => {
+    if (getCanPreviousPage()) {
+      setCurrent((prev) => prev - 1);
+    }
+  }, [current, setCurrent]);
+
+  useEffect(() => {
+    if (filters?.length) {
+      // compare filters with appliedFilters
+      // if they are not equal then update the filters
+      if (JSON.stringify(filters) !== JSON.stringify(appliedFilters)) {
+        setFilters(filters);
+      }
+    }
+  }, [filters]);
 
   return (
     <div style={{ padding: "16px" }}>
@@ -215,54 +141,50 @@ export const ProductList: React.FC<IResourceComponentsProps> = () => {
               disabled={!getCanPreviousPage()}
             />
           </PaginationItem>
-          <PaginationItem>
-            <PaginationLink
-              onClick={() => setPageIndex(0)}
-              disabled={!getCanPreviousPage()}
-            >
-              1
-            </PaginationLink>
-          </PaginationItem>
-          {getPageCount() > 4 && (
+          {pageCount > numberOfLastPageLinks &&
+            Array.from({
+              length: 4,
+            }).map((_, index) => {
+              return (
+                <PaginationItem key={index}>
+                  <PaginationLink
+                    onClick={() => setCurrent(index + 1)}
+                    disabled={current === index + 1}
+                  >
+                    {index + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              );
+            })}
+          {pageCount > numberOfLastPageLinks && (
             <PaginationItem>
               <PaginationEllipsis />
             </PaginationItem>
           )}
-          {
-            // @ts-ignore
+          {pageCount > numberOfLastPageLinks &&
             Array.from({
-              length: getPageCount() > 4 ? 4 : getPageCount() - 1,
+              length: 4,
             }).map((_, index) => {
               return (
                 <PaginationItem key={index}>
                   <PaginationLink
                     onClick={() =>
-                      setPageIndex(
-                        getPageCount() > 4
-                          ? getPageCount() - 4 + index
-                          : index + 1
+                      setCurrent(
+                        pageCount - (numberOfLastPageLinks - 1) + index
                       )
                     }
                     disabled={
-                      getState().pagination.pageIndex + 1 ===
-                      (getPageCount() > 4
-                        ? getPageCount() - 3 + index
-                        : index + 1)
+                      current ===
+                      pageCount - (numberOfLastPageLinks - 1) + index
                     }
                   >
-                    {getPageCount() > 4
-                      ? getPageCount() - 3 + index
-                      : index + 1}
+                    {pageCount - (numberOfLastPageLinks - 1) + index}
                   </PaginationLink>
                 </PaginationItem>
               );
-            })
-          }
+            })}
           <PaginationItem>
-            <PaginationNext
-              onClick={() => nextPage()}
-              disabled={!getCanNextPage()}
-            />
+            <PaginationNext onClick={nextPage} disabled={!getCanNextPage()} />
           </PaginationItem>
         </PaginationContent>
       </Pagination>

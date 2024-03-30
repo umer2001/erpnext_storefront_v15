@@ -76,6 +76,13 @@ td:last-child {
   font-weight: bold;
 }
 
+.select__control {
+  border-radius: calc(var(--radius) - 2px);
+  background-color: hsl(var(--background));
+  border-color: hsl(var(--input)) !important;
+  border-width: 1px !important;
+}
+
 @media screen and (max-width: 751px) {
   .menu {
     border-right: none;

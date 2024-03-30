@@ -47,7 +47,8 @@ export const authProvider: AuthBindings = {
   getIdentity: async () => {
     const token = localStorage.getItem(TOKEN_KEY);
     if (token) {
-      return await auth.whoami();
+      const response = await auth.whoami();
+      return response.message;
     }
     return null;
   },

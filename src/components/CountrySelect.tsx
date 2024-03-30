@@ -1,5 +1,6 @@
 import { useSelect } from "@refinedev/core";
 import Select from "react-select";
+import { Input } from "./ui/input";
 
 type CountrySelectProps = {
   name: string;
@@ -26,11 +27,20 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
 
   return (
     <Select
+      classNamePrefix="select"
+      placeholder="Country"
       isLoading={overtime.elapsedTime !== undefined}
       loadingMessage={() =>
         options.length === 0 ? "No results" : "Loading..."
       }
-      value={options.find((option) => option.value === value)}
+      value={
+        value === undefined
+          ? ""
+          : options.find((option) => option.value === value) ?? {
+              value: value,
+              label: value,
+            }
+      }
       options={options}
       onInputChange={onSearch}
       onChange={onChange}

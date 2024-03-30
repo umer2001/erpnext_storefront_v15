@@ -54,11 +54,20 @@ const CitySelect: React.FC<CitySelectProps> = ({
 
   return (
     <Select
+      classNamePrefix="select"
+      placeholder="City"
       isLoading={overtime.elapsedTime !== undefined}
       loadingMessage={() =>
         options.length === 0 ? "No results" : "Loading..."
       }
-      value={options.find((option) => option.value === value)}
+      value={
+        value === undefined
+          ? ""
+          : options.find((option) => option.value === value) ?? {
+              value: value,
+              label: value,
+            }
+      }
       options={options}
       onInputChange={onSearch}
       onChange={onChange}

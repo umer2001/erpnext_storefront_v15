@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { BaseRecord, GetListResponse } from "@refinedev/core";
+import { GetListResponse } from "@refinedev/core";
 
 export interface TransformRes {
   [key: string]: {

@@ -39,11 +39,16 @@ import {
   authProvider as frappeAuthProvider,
 } from "refine-frappe-provider";
 import { AddressList } from "./pages/address/list";
-import { AddressCreate } from "./pages/address/create";
-import { AddressEdit } from "./pages/address/edit";
+import AddressCreate from "./pages/account/AddressCreate";
+import { AddressEdit } from "./pages/account/AddressEdit";
 import { CartProvider } from "./hooks/useCart";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ProductShow } from "./pages/products/show";
+import { WishlistProvider } from "./hooks/useWishlist";
+import Account from "./pages/account";
+import Profile from "./pages/account/Profile";
+import Addresses from "./pages/account/Addresses";
+import Checkout from "./pages/checkout";
 
 const providerConfig = {
   url: import.meta.env.VITE_BACKEND_URL,
@@ -96,13 +101,11 @@ function App() {
               },
               {
                 name: "address",
-                list: "/address",
-                create: "/address/create",
-                edit: "/address/edit/:id",
-                show: "/address/show/:id",
+                list: "/account/addresses",
+                create: "/account/addresses/new",
+                edit: "/account/addresses/:id",
                 meta: {
                   dataProviderName: "storeProvider",
-                  canDelete: true,
                 },
               },
               {
@@ -111,10 +114,22 @@ function App() {
                   dataProviderName: "storeProvider",
                 },
                 list: "/",
-                show: "/show/:id",
+                show: "/product/:id",
+              },
+              {
+                name: "products",
+                meta: {
+                  dataProviderName: "storeProvider",
+                },
+                list: "/category/:categoryId",
               },
             ]}
             options={{
+              reactQuery: {
+                clientConfig: {
+                  defaultOptions: { queries: { staleTime: 1000 * 60 * 5 } },
+                },
+              },
               syncWithLocation: true,
               warnWhenUnsavedChanges: true,
               useNewQueryKeys: true,
@@ -122,59 +137,86 @@ function App() {
             }}
           >
             <CartProvider>
-              <Routes>
-                <Route index element={<ProductList />} />
-                <Route path="/show/:id" element={<ProductShow />} />
-                <Route
-                  element={
-                    <Authenticated
-                      key="authenticated-inner"
-                      fallback={<CatchAllNavigate to="/login" />}
-                    >
+              <WishlistProvider>
+                <Routes>
+                  <Route
+                    element={
                       <Layout>
                         <Outlet />
                       </Layout>
-                    </Authenticated>
-                  }
-                >
+                    }
+                  >
+                    <Route index element={<ProductList />} />
+                    <Route
+                      path="/category/:categoryId"
+                      element={<ProductList />}
+                    />
+                    <Route path="/product/:id" element={<ProductShow />} />
+                  </Route>
                   <Route
-                    index
-                    element={<NavigateToResource resource="blog_posts" />}
-                  />
-                  <Route path="/blog-posts">
-                    <Route index element={<BlogPostList />} />
-                    <Route path="create" element={<BlogPostCreate />} />
-                    <Route path="edit/:id" element={<BlogPostEdit />} />
-                    <Route path="show/:id" element={<BlogPostShow />} />
+                    element={
+                      <Authenticated
+                        key="authenticated-inner"
+                        fallback={<CatchAllNavigate to="/login" />}
+                      >
+                        <Layout>
+                          <Outlet />
+                        </Layout>
+                      </Authenticated>
+                    }
+                  >
+                    <Route
+                      index
+                      element={<NavigateToResource resource="products" />}
+                    />
+                    <Route path="/checkout" element={<Checkout />} />
+                    <Route path="/account" element={<Account />}>
+                      <Route index element={<Profile />} />
+                      <Route path="addresses">
+                        <Route index element={<Addresses />} />
+                        <Route path=":id" element={<AddressEdit />} />
+                        <Route path="new" element={<AddressCreate />} />
+                      </Route>
+                      <Route path="orders" element={<h1>Orders</h1>} />
+                    </Route>
+                    <Route path="/blog-posts">
+                      <Route index element={<BlogPostList />} />
+                      <Route path="create" element={<BlogPostCreate />} />
+                      <Route path="edit/:id" element={<BlogPostEdit />} />
+                      <Route path="show/:id" element={<BlogPostShow />} />R
+                    </Route>
+                    <Route path="/categories">
+                      <Route index element={<CategoryList />} />
+                      <Route path="create" element={<CategoryCreate />} />
+                      <Route path="edit/:id" element={<CategoryEdit />} />
+                      <Route path="show/:id" element={<CategoryShow />} />
+                    </Route>
+                    <Route path="/address">
+                      <Route index element={<AddressList />} />
+                      <Route path="create" element={<AddressCreate />} />
+                      <Route path="edit/:id" element={<AddressEdit />} />
+                    </Route>
+                    <Route path="*" element={<ErrorComponent />} />
                   </Route>
-                  <Route path="/categories">
-                    <Route index element={<CategoryList />} />
-                    <Route path="create" element={<CategoryCreate />} />
-                    <Route path="edit/:id" element={<CategoryEdit />} />
-                    <Route path="show/:id" element={<CategoryShow />} />
+                  <Route
+                    element={
+                      <Authenticated
+                        key="authenticated-outer"
+                        fallback={<Outlet />}
+                      >
+                        <NavigateToResource />
+                      </Authenticated>
+                    }
+                  >
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route
+                      path="/forgot-password"
+                      element={<ForgotPassword />}
+                    />
                   </Route>
-                  <Route path="/address">
-                    <Route index element={<AddressList />} />
-                    <Route path="create" element={<AddressCreate />} />
-                    <Route path="edit/:id" element={<AddressEdit />} />
-                  </Route>
-                  <Route path="*" element={<ErrorComponent />} />
-                </Route>
-                <Route
-                  element={
-                    <Authenticated
-                      key="authenticated-outer"
-                      fallback={<Outlet />}
-                    >
-                      <NavigateToResource />
-                    </Authenticated>
-                  }
-                >
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
-                </Route>
-              </Routes>
+                </Routes>
+              </WishlistProvider>
             </CartProvider>
             <RefineKbar />
             <UnsavedChangesNotifier />

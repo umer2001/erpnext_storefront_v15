@@ -20,9 +20,7 @@ export const transformArgs: TransformArgs = {
             } else if (filterCat === "attribute_filters") {
               acc.attribute_filters.push(filter);
             } else {
-              if (filterCat === "search") {
-                acc.search = filter.value;
-              }
+              acc[filterCat] = filter.value;
             }
           }
           return acc;
@@ -33,6 +31,7 @@ export const transformArgs: TransformArgs = {
           attribute_filters: [],
         } as Record<string, any>
       );
+      console.log("filters", filters);
 
       return {
         ...filters,
