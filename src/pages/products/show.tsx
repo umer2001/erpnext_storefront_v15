@@ -90,7 +90,11 @@ export const ProductShow: React.FC<IResourceComponentsProps> = () => {
             <AccordionItem value="item-1">
               <AccordionTrigger>{t("Details")}</AccordionTrigger>
               <AccordionContent>
-                {product.web_long_description}
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: product.web_long_description,
+                  }}
+                />
               </AccordionContent>
             </AccordionItem>
           </Accordion>
