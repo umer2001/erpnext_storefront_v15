@@ -81,24 +81,30 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const cart = localStorage.getItem("cart");
-    if (cart && cart !== "{}") {
+    if (
+      cart &&
+      cart !== "{}" &&
+      !!Object.values<number>(JSON.parse(cart ?? "{}")).find((qty) => qty > 0)
+    ) {
       setCart(JSON.parse(cart));
     } else {
       // fetch cart from server
-      console.log("fetching cart from server", localStorage.getItem("cart"));
-      refreshServerCart().then(({ data }) => {
-        setCart(
-          (data?.message?.doc.items ?? []).reduce(
-            (acc: Record<string, number>, cur: any) => {
-              acc[cur.item_code] = cur.qty;
-              return acc;
-            },
-            {} as Record<string, number>
-          )
-        );
-      });
+      if (authState?.authenticated) {
+        console.log("fetching cart from server", localStorage.getItem("cart"));
+        refreshServerCart().then(({ data }) => {
+          setCart(
+            (data?.message?.doc.items ?? []).reduce(
+              (acc: Record<string, number>, cur: any) => {
+                acc[cur.item_code] = cur.qty;
+                return acc;
+              },
+              {} as Record<string, number>
+            )
+          );
+        });
+      }
     }
-  }, []);
+  }, [authState?.authenticated]);
 
   useEffect(() => {
     setCartTotal("Loading");
