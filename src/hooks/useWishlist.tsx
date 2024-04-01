@@ -66,6 +66,11 @@ export const WishlistProvider = ({
     queryFn: () =>
       serverSideWishlist.list(localStorage.getItem(TOKEN_KEY) ?? ""),
     enabled: authState?.authenticated && !isLoading,
+    initialData: {
+      data: {
+        items: [],
+      },
+    },
   });
 
   const syncWishlistToServer = useCallback(

@@ -37,13 +37,16 @@ const ProductCard = ({
               width={width}
               height={height}
               className={cn(
-                "object-cover transition-all hover:scale-105",
+                "mx-auto object-cover transition-all hover:scale-105",
                 "aspect-square"
               )}
             />
             <Button
               className="w-64 absolute bottom-2 left-1/2 transform -translate-x-1/2"
-              onClick={() => addToCart(itemCode)}
+              onClick={(e) => {
+                e.preventDefault();
+                addToCart(itemCode);
+              }}
             >
               {t("Add to Cart")}
             </Button>

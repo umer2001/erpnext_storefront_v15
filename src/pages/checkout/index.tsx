@@ -48,18 +48,21 @@ const Checkout = () => {
           ({ description }: any) =>
             description === serverCart.message.doc.shipping_rule
         )?.tax_amount ?? 0;
-      const totalTax =
-        serverCart.message.doc.total_taxes_and_charges - totalShipping;
+      const totalTax = Math.max(
+        serverCart.message.doc.total_taxes_and_charges - totalShipping,
+        0
+      );
       const total = typeof cartTotal === "string" ? 0 : cartTotal;
       return {
         totalTax,
         totalShipping,
-        totalDiscount:
-          total +
-          totalTax +
-          totalShipping -
-          serverCart?.message.doc.grand_total +
-          serverCart?.message.doc.discount_amount,
+        totalDiscount: !serverCart?.message.doc.grand_total
+          ? 0
+          : total +
+            totalTax +
+            totalShipping -
+            serverCart?.message.doc.grand_total +
+            serverCart?.message.doc.discount_amount,
       };
     }
     return {
@@ -157,7 +160,10 @@ const Checkout = () => {
           </h2>
           <div className="mt-6 flex flex-col gap-y-4">
             <Label>{t("Address")}</Label>
-            {addressLoading && <div>Loading...</div>}
+            {addressLoading &&
+              !!serverCart?.message.doc.shipping_address_name && (
+                <div>Loading...</div>
+              )}
             {address && <AddressCard {...address?.message} />}
             {!address && (
               <Button
@@ -170,13 +176,13 @@ const Checkout = () => {
               </Button>
             )}
             <ShippingRuleSelect
-              initialShippingRule={serverCart?.message.shipping_rules.find(
+              initialShippingRule={serverCart?.message.shipping_rules?.find(
                 ({ name }: { name: string }) =>
                   name === serverCart?.message.doc.shipping_rule
               )}
             />
             <div>
-              <Label htmlFor="pm">Payment Method</Label>
+              <Label htmlFor="pm">{t("Payment Method")}</Label>
               <RadioGroup
                 defaultValue="card"
                 className="grid grid-cols-2 gap-4"

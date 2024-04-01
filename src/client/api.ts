@@ -11,6 +11,24 @@ export const auth = {
       .then((res) => res.data),
   logout: async (): Promise<any> =>
     api.get("/method/logout").then((res) => res.data),
+  register: async (data: any): Promise<any> =>
+    api
+      .post("/method/webshop.webshop.api.sign_up", data)
+      .then((res) => res.data),
+  forgotPassword: async (data: any): Promise<any> =>
+    api
+      .post("/method/frappe.core.doctype.user.user.reset_password", {
+        user: data.email,
+      })
+      .then((res) => res.data),
+  updatePassword: async (data: any): Promise<any> =>
+    api
+      .post("/method/frappe.core.doctype.user.user.update_password", {
+        old_password: data.old_password,
+        new_password: data.password,
+        key: data.key,
+      })
+      .then((res) => res.data),
 };
 
 export const products = {

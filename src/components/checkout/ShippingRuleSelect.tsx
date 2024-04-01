@@ -1,7 +1,11 @@
 import { useCart } from "@/hooks/useCart";
 import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
-import { useCustomMutation, useInvalidate } from "@refinedev/core";
+import {
+  useCustomMutation,
+  useInvalidate,
+  useTranslate,
+} from "@refinedev/core";
 import { useState } from "react";
 
 type ShippingRuleSelectProps = {
@@ -11,6 +15,7 @@ type ShippingRuleSelectProps = {
 const ShippingRuleSelect = ({
   initialShippingRule,
 }: ShippingRuleSelectProps) => {
+  const t = useTranslate();
   const [shippingRule, setshippingRule] = useState(initialShippingRule);
   const { serverCart } = useCart();
 
@@ -33,7 +38,7 @@ const ShippingRuleSelect = ({
 
   return (
     <div>
-      <Label>Shipping Rule</Label>
+      <Label>{t("Shipping Rule")}</Label>
       <Select
         value={shippingRule?.name}
         onValueChange={(shippingRule) => {
@@ -58,7 +63,7 @@ const ShippingRuleSelect = ({
           </div>
         </SelectTrigger>
         <SelectContent>
-          {serverCart?.message.shipping_rules.map(
+          {serverCart?.message.shipping_rules?.map(
             ({ name, shipping_amount }: any) => (
               <SelectItem key={name} value={name}>
                 {name}

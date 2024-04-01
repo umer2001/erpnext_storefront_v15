@@ -31,7 +31,6 @@ export const transformArgs: TransformArgs = {
           attribute_filters: [],
         } as Record<string, any>
       );
-      console.log("filters", filters);
 
       return {
         ...filters,

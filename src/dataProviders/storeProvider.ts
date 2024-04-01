@@ -14,8 +14,6 @@ import { transformRes } from "./transformRes";
 export const storeProvider: DataProvider = {
   getList: async ({ resource, pagination, sorters, filters, meta }) => {
     // pagenation
-    console.log("ss", pagination);
-
     const start =
       ((pagination?.current ?? 0) - 1) * (pagination?.pageSize ?? 20);
 

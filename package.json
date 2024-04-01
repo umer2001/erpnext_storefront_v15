@@ -8,6 +8,7 @@
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-avatar": "^1.0.4",
+    "@radix-ui/react-collapsible": "^1.0.3",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
     "@radix-ui/react-label": "^2.0.2",
@@ -58,10 +59,12 @@
     "@typescript-eslint/parser": "^5.57.1",
     "@vitejs/plugin-react": "^4.0.0",
     "autoprefixer": "^10.4.19",
+    "dotenv": "^16.4.5",
     "eslint": "^8.38.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.3.4",
     "i18next-parser": "^8.13.0",
+    "openai": "^4.31.0",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.1",
     "typescript": "^4.7.4",
@@ -72,7 +75,8 @@
     "build": "tsc && refine build",
     "preview": "refine start",
     "refine": "refine",
-    "extract-i18n": "yarn i18next"
+    "extract-i18n": "yarn i18next",
+    "translate": "node scripts/translate.js"
   },
   "browserslist": {
     "production": [

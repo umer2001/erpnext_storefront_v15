@@ -3,6 +3,7 @@ import { Button } from "../ui/button";
 import { useOne } from "@refinedev/core";
 import { useCart } from "@/hooks/useCart";
 import { Link } from "react-router-dom";
+import CartItemSkeleton from "../skeletons/CartItemSkeleton";
 
 type CartItemProps = {
   itemCode: string;
@@ -10,13 +11,13 @@ type CartItemProps = {
 
 const CartItem = ({ itemCode }: CartItemProps) => {
   const { cart, addToCart, removeFromCart } = useCart();
-  const { data, isLoading } = useOne({
+  const { data, isLoading, isFetching, isRefetching } = useOne({
     resource: "products",
     id: itemCode,
   });
 
-  if (isLoading) {
-    return <li>Loading...</li>;
+  if (isLoading || isFetching || isRefetching) {
+    return <CartItemSkeleton />;
   }
 
   const item = data?.message.product_info;

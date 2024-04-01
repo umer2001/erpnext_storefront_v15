@@ -15,16 +15,17 @@ import ProductCounter from "@/components/ProductCounter";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
 import ProductImages from "@/components/ProductImages";
+import ProductSkeleton from "@/components/skeletons/ProductSkeleton";
 
 export const ProductShow: React.FC<IResourceComponentsProps> = () => {
   const t = useTranslate();
   const { addToCart } = useCart();
   const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const { queryResult, showId } = useShow({});
-  const { data, isLoading } = queryResult;
+  const { data, isFetching, isLoading, isRefetching } = queryResult;
 
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (isFetching || isLoading || isRefetching) {
+    return <ProductSkeleton />;
   }
 
   const product = data?.message.product_info;

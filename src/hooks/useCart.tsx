@@ -112,7 +112,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     }
     // update cart total
     getTotal().then(setCartTotal);
-  }, [cart]);
+  }, [cart, authState?.authenticated]);
 
   const setIsOpen = (value: boolean | undefined | null) => {
     if (value !== undefined && value !== null) {

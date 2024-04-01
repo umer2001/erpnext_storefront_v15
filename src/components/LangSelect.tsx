@@ -1,7 +1,14 @@
 import { useGetLocale, useSetLocale, useTranslate } from "@refinedev/core";
 import { useTranslation } from "react-i18next";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-const LangSelect = () => {
+const LangSelect = (props: any) => {
   const { i18n } = useTranslation();
   const t = useTranslate();
   const locale = useGetLocale();
@@ -19,16 +26,18 @@ const LangSelect = () => {
   }));
 
   return (
-    <select
-      onChange={(e) => changeLanguage(e.target.value)}
-      value={currentLocale}
-    >
-      {menuItems.map((item) => (
-        <option key={item.key} value={item.key}>
-          {item.label}
-        </option>
-      ))}
-    </select>
+    <Select value={currentLocale} onValueChange={changeLanguage}>
+      <SelectTrigger {...props}>
+        <SelectValue className="w-full" />
+      </SelectTrigger>
+      <SelectContent>
+        {menuItems.map((item) => (
+          <SelectItem key={item.key} value={item.key}>
+            {item.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 };
 

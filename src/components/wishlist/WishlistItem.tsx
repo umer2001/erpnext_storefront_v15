@@ -3,6 +3,7 @@ import { Button } from "../ui/button";
 import { useOne } from "@refinedev/core";
 import { useWishlist } from "@/hooks/useWishlist";
 import { Link } from "react-router-dom";
+import WishlistItemSkeleton from "../skeletons/WishlistItemSkeleton";
 
 type WishlistItemProps = {
   itemCode: string;
@@ -10,13 +11,13 @@ type WishlistItemProps = {
 
 const WishlistItem = ({ itemCode }: WishlistItemProps) => {
   const { removeFromWishlist } = useWishlist();
-  const { data, isLoading } = useOne({
+  const { data, isLoading, isFetching, isRefetching } = useOne({
     resource: "products",
     id: itemCode,
   });
 
-  if (isLoading) {
-    return <li>Loading...</li>;
+  if (isLoading || isFetching || isRefetching) {
+    return <WishlistItemSkeleton />;
   }
 
   const item = data?.message.product_info;

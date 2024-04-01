@@ -49,6 +49,7 @@ import Account from "./pages/account";
 import Profile from "./pages/account/Profile";
 import Addresses from "./pages/account/Addresses";
 import Checkout from "./pages/checkout";
+import { ResetPassword } from "./pages/resetPassword";
 
 const providerConfig = {
   url: import.meta.env.VITE_BACKEND_URL,
@@ -59,7 +60,10 @@ function App() {
 
   const i18nProvider = {
     translate: (key: string, params: Record<string, string>) => t(key, params),
-    changeLocale: (lang: string) => i18n.changeLanguage(lang),
+    changeLocale: (lang: string) => {
+      localStorage.setItem("locale", lang);
+      return i18n.changeLanguage(lang);
+    },
     getLocale: () => i18n.language,
   };
 
@@ -213,6 +217,10 @@ function App() {
                     <Route
                       path="/forgot-password"
                       element={<ForgotPassword />}
+                    />
+                    <Route
+                      path="/reset-password/:key"
+                      element={<ResetPassword />}
                     />
                   </Route>
                 </Routes>
