@@ -50,6 +50,7 @@ import Profile from "./pages/account/Profile";
 import Addresses from "./pages/account/Addresses";
 import Checkout from "./pages/checkout";
 import { ResetPassword } from "./pages/resetPassword";
+import LangSelect from "./components/LangSelect";
 
 const providerConfig = {
   url: import.meta.env.VITE_BACKEND_URL,
@@ -227,6 +228,7 @@ function App() {
               </WishlistProvider>
             </CartProvider>
             <RefineKbar />
+            <LangSelect className="fixed bottom-16 right-4 w-max max-w-[180px] z-30" />
             <UnsavedChangesNotifier />
             <DocumentTitleHandler />
             <ToastContainer />
