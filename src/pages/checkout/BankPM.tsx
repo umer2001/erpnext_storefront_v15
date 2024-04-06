@@ -164,7 +164,7 @@ export const BankUploadSlip = () => {
             <FormField
               control={form.control}
               name="payment_info.bank"
-              render={() => (
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel>
                     {t("Select the Bank Account you transfered to")}
@@ -172,7 +172,7 @@ export const BankUploadSlip = () => {
                   <FormControl>
                     <RadioGroup
                       className="flex flex-col gap-y-2 mt-2"
-                      value={form.watch("payment_info.bank")}
+                      {...field}
                     >
                       {selectedPaymentMethod.banks_list.map((bank: any) => (
                         <div
