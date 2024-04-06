@@ -36,6 +36,10 @@ const Addresses = () => {
             country={address.country}
             state={address.state}
             pincode={address.pincode}
+            actions={{
+              edit: true,
+              delete: true,
+            }}
           />
         ))}
       </div>

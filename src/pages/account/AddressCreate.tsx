@@ -1,9 +1,18 @@
 import AddressForm from "@/components/forms/AddressForm";
-import { useCreate, useTranslate } from "@refinedev/core";
+import { useBack, useCreate, useTranslate } from "@refinedev/core";
 
 const AddressCreate = () => {
   const t = useTranslate();
-  const { mutate, isLoading } = useCreate();
+  const back = useBack();
+  const { mutate, isLoading } = useCreate({
+    mutationOptions: {
+      onSettled: (data, err) => {
+        if (!err) {
+          back();
+        }
+      },
+    },
+  });
 
   return (
     <div className="w-full lg:w-[450px] mx-auto">

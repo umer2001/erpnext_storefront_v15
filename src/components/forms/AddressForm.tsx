@@ -5,9 +5,11 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { addressSchema } from "./addressSchema";
 import { useForm } from "@refinedev/react-hook-form";
 import { Loader2 } from "lucide-react";
@@ -43,6 +45,7 @@ const AddressForm = ({
   const form = useForm({
     resolver: yupResolver(addressSchema),
     defaultValues: initialValues,
+    values: initialValues,
     mode: "onChange",
   });
 
@@ -175,6 +178,56 @@ const AddressForm = ({
             )}
           />
         </div>
+
+        <div className="flex flex-col">
+          <FormField
+            control={form.control}
+            name="is_primary_address"
+            render={({ field }) => (
+              <FormItem className="flex items-end">
+                <FormControl>
+                  <Checkbox
+                    {...field}
+                    className="mr-2"
+                    checked={form.watch("is_primary_address") === 1}
+                    onCheckedChange={(checked) => {
+                      form.setValue("is_primary_address", checked ? 1 : 0, {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                      });
+                    }}
+                  />
+                </FormControl>
+                <FormLabel>{t("Primary Address")}</FormLabel>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="is_shipping_address"
+            render={({ field }) => (
+              <FormItem className="flex items-end">
+                <FormControl>
+                  <Checkbox
+                    {...field}
+                    className="mr-2"
+                    checked={form.watch("is_shipping_address") === 1}
+                    onCheckedChange={(checked) =>
+                      form.setValue("is_shipping_address", checked ? 1 : 0, {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                      })
+                    }
+                  />
+                </FormControl>
+                <FormLabel>{t("Default Shipping Address")}</FormLabel>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
         <Button
           className="w-full"
           type="submit"

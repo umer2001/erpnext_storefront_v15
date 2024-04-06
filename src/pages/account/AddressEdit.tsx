@@ -1,7 +1,9 @@
 import AddressForm from "@/components/forms/AddressForm";
 import {
   IResourceComponentsProps,
+  useBack,
   useCustomMutation,
+  useInvalidate,
   useNavigation,
   useNotification,
   useSelect,
@@ -16,8 +18,24 @@ export const AddressEdit: React.FC<IResourceComponentsProps> = () => {
     refineCore: { queryResult, id },
   } = useForm({});
   const t = useTranslate();
+  const invalidate = useInvalidate();
+  const back = useBack();
 
-  const { mutate, isLoading } = useUpdate();
+  const { mutate, isLoading } = useUpdate({
+    mutationOptions: {
+      onSettled: (data: any, err: any) => {
+        if (!err) {
+          back();
+          invalidate({
+            dataProviderName: "storeProvider",
+            resource: "address",
+            invalidates: ["detail"],
+            id: id as string,
+          });
+        }
+      },
+    },
+  });
 
   if (queryResult?.isLoading) {
     return <div>Loading...</div>;

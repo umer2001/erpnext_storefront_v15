@@ -15,6 +15,11 @@ import {
 import { useDelete, useTranslate } from "@refinedev/core";
 import { useNavigate } from "react-router-dom";
 
+type AddressCardActions = {
+  edit?: boolean;
+  delete?: boolean;
+};
+
 type AddressCardProps = {
   name: string;
   phone?: string;
@@ -25,6 +30,7 @@ type AddressCardProps = {
   state?: string;
   pincode?: string;
   display?: string;
+  actions?: AddressCardActions;
 };
 
 const AddressCard = ({
@@ -37,6 +43,10 @@ const AddressCard = ({
   state,
   pincode,
   display,
+  actions = {
+    edit: false,
+    delete: false,
+  },
 }: AddressCardProps) => {
   const navigate = useNavigate();
 
@@ -46,16 +56,18 @@ const AddressCard = ({
         <CardTitle className="text-lg flex items-center">
           <MapPinned size={20} className="mr-2" /> {name}
         </CardTitle>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-5 text-gray-500 hover:text-gray-900 hover:bg-transparent"
-          onClick={() => navigate(`/account/addresses/${name}`)}
-        >
-          <Pencil size={18} />
-        </Button>
+        {actions.edit && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-5 text-gray-500 hover:text-gray-900 hover:bg-transparent"
+            onClick={() => navigate(`/account/addresses/${name}`)}
+          >
+            <Pencil size={18} />
+          </Button>
+        )}
       </CardHeader>
-      <CardContent className="text-gray-700">
+      <CardContent className="text-gray-700 relative">
         {display ? (
           <p dangerouslySetInnerHTML={{ __html: display }} />
         ) : (
@@ -80,6 +92,7 @@ const AddressCard = ({
             )}
           </>
         )}
+        {actions.delete && <DeletionConfirmation name={name} />}
       </CardContent>
       <img src="/border-line.png" className="w-full h-1.5" />
     </Card>
@@ -100,7 +113,7 @@ export const DeletionConfirmation = ({ name }: DeletionConfirmationProps) => {
         <Button
           variant="ghost"
           size="icon"
-          className="w-5 text-gray-500 hover:text-gray-900 hover:bg-transparent"
+          className="w-5 text-gray-500 hover:text-destructive hover:bg-transparent absolute right-6 bottom-4"
         >
           <Trash2 size={18} />
         </Button>
@@ -119,6 +132,7 @@ export const DeletionConfirmation = ({ name }: DeletionConfirmationProps) => {
           <AlertDialogAction
             onClick={() =>
               mutate({
+                dataProviderName: "storeProvider",
                 resource: "address",
                 id: name,
               })

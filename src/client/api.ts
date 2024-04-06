@@ -69,7 +69,7 @@ export const categories = {
 export const address = {
   list: (params: any) =>
     api
-      .get("method/headless_e_commerce.api.get_addresses", {
+      .get("method/webshop.webshop.shopping_cart.cart.get_addresses", {
         params: params,
       })
       .then((res) => res.data),
@@ -92,7 +92,12 @@ export const address = {
         params: { address_name: addressName },
       })
       .then((res) => res.data),
-  delete: null,
+  delete: (addressName: string) =>
+    api
+      .delete("method/webshop.webshop.shopping_cart.cart.delete_address", {
+        params: { address_name: addressName },
+      })
+      .then((res) => res.data),
 };
 
 export const cart = {

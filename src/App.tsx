@@ -84,7 +84,6 @@ function App() {
             i18nProvider={i18nProvider}
             routerProvider={routerBindings}
             authProvider={authProvider}
-            // authProvider={frappeAuthProvider(providerConfig)}
             notificationProvider={notificationProvider}
             resources={[
               {

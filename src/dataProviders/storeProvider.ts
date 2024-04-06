@@ -50,10 +50,8 @@ export const storeProvider: DataProvider = {
       variables
     );
   },
-  deleteOne: function <TData extends BaseRecord = BaseRecord>(
-    params: DeleteOneParams
-  ): Promise<DeleteOneResponse<TData>> {
-    throw new Error("Function not implemented.");
+  deleteOne: async ({ resource, id, meta }) => {
+    return await apis[resource as keyof typeof apis]?.delete?.(id as string);
   },
   getApiUrl: () => `${import.meta.env.VITE_BACKEND_URL}/api`,
   custom: async ({ url, payload }) => {
