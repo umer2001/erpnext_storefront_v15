@@ -117,10 +117,6 @@ export const cart = {
     api
       .post("method/webshop.webshop.shopping_cart.cart.apply_coupon_code", data)
       .then((res) => res.data),
-  placeOrder: (data: any) =>
-    api
-      .post("method/webshop.webshop.shopping_cart.cart.place_order", data)
-      .then((res) => res.data),
   updateCartAddress: (data: any) =>
     api
       .post(
@@ -131,6 +127,38 @@ export const cart = {
   list: null,
   create: null,
   delete: null,
+};
+
+export const orders = {
+  list: (params: any) =>
+    api
+      .get("method/webshop.webshop.api.get_orders", {
+        params: params,
+      })
+      .then((res) => res.data),
+  get: (orderName: string) =>
+    api
+      .get("method/webshop.webshop.api.get_order", {
+        params: { order_name: orderName },
+      })
+      .then((res) => res.data),
+  create: (data: any) =>
+    api
+      .post("method/webshop.webshop.shopping_cart.cart.place_order", data)
+      .then((res) => res.data),
+  update: null,
+  delete: null,
+};
+
+export const checkout = {
+  getPaymentMethods: () =>
+    api
+      .get("method/webshop.webshop.api.payment_methods")
+      .then((res) => res.data),
+  confirmPayment: (data: any) =>
+    api
+      .post("method/webshop.webshop.api.confirm_payment", data)
+      .then((res) => res.data),
 };
 
 export const wishlist = {
@@ -160,4 +188,5 @@ export default {
   products,
   address,
   categories,
+  orders,
 };

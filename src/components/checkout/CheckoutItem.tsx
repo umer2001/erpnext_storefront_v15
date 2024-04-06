@@ -1,13 +1,11 @@
-import { useCart } from "@/hooks/useCart";
 import { useOne } from "@refinedev/core";
-import React from "react";
 
 type CheckoutItemProps = {
   itemCode: string;
+  qty: number;
 };
 
-const CheckoutItem = ({ itemCode }: CheckoutItemProps) => {
-  const { cart } = useCart();
+const CheckoutItem = ({ itemCode, qty }: CheckoutItemProps) => {
   const { data, isLoading } = useOne({
     resource: "products",
     id: itemCode,
@@ -30,8 +28,7 @@ const CheckoutItem = ({ itemCode }: CheckoutItemProps) => {
       <div className="flex-1">
         <p className="text-sm text-muted-foreground">{item.web_item_name}</p>
         <strong className="text-darkgray">
-          {cart[itemCode]}{" "}
-          {`${item.uom}${(cart[itemCode] ?? 0) > 1 ? "s" : ""}`}
+          {qty} {`${item.uom}${(qty ?? 0) > 1 ? "s" : ""}`}
         </strong>
       </div>
       <div>

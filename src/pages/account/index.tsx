@@ -5,9 +5,14 @@ import { FileText, MapPinned, User } from "lucide-react";
 
 const Account = () => {
   const t = useTranslate();
-  const { data: profile, isLoading } = useGetIdentity();
+  const {
+    data: profile,
+    isLoading,
+    isFetching,
+    isRefetching,
+  } = useGetIdentity();
 
-  if (isLoading) {
+  if (isLoading || isFetching || isRefetching) {
     return <div>Loading...</div>;
   }
 
@@ -18,10 +23,10 @@ const Account = () => {
         <div className="flex flex-col gap-3">
           <Avatar className="h-24 w-24">
             <AvatarImage
-              src={profile.user?.user_image}
-              alt={`${profile.user?.full_name} profile image`}
+              src={profile?.user?.user_image}
+              alt={`${profile?.user?.full_name} profile image`}
             />
-            <AvatarFallback>{profile.user?.full_name[0]}</AvatarFallback>
+            <AvatarFallback>{profile?.user?.full_name[0]}</AvatarFallback>
           </Avatar>
           <h2 className="text-2xl font-semibold text-primary">
             {profile?.user.full_name}
@@ -35,6 +40,7 @@ const Account = () => {
                 isActive ? "text-primary" : "text-gray-500"
               }`
             }
+            end
             to="/account"
           >
             <User size={20} /> {t("Account Details")}

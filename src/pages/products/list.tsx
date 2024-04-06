@@ -24,6 +24,7 @@ import {
 import ProductCard from "@/components/ProductCard";
 import ProductListSkeleton from "@/components/skeletons/ProductListSkeleton";
 import { useSearchParams } from "react-router-dom";
+import usePagenation from "@/hooks/usePagenation";
 
 export const ProductList: React.FC<IResourceComponentsProps> = () => {
   const {
@@ -47,29 +48,8 @@ export const ProductList: React.FC<IResourceComponentsProps> = () => {
 
   const numberOfLastPageLinks = 4;
 
-  const getCanNextPage = useCallback(
-    () => current < pageCount,
-    [current, pageCount]
-  );
-
-  const nextPage = useCallback(() => {
-    console.log({
-      current,
-      getPageCount: pageCount,
-    });
-
-    if (getCanNextPage()) {
-      setCurrent((prev) => prev + 1);
-    }
-  }, [getCanNextPage, setCurrent]);
-
-  const getCanPreviousPage = useCallback(() => current > 1, [current]);
-
-  const previousPage = useCallback(() => {
-    if (getCanPreviousPage()) {
-      setCurrent((prev) => prev - 1);
-    }
-  }, [current, setCurrent]);
+  const { nextPage, getCanNextPage, getCanPreviousPage, previousPage } =
+    usePagenation({ current, setCurrent, pageCount });
 
   useEffect(() => {
     if (filters?.length) {

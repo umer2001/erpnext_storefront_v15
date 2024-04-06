@@ -68,7 +68,10 @@ const ShippingRuleSelect = ({
               <SelectItem key={name} value={name}>
                 {name}
                 <p className="text-xs [&_p]:leading-relaxed">
-                  THB {shipping_amount}
+                  {new Intl.NumberFormat("th-TH", {
+                    style: "currency",
+                    currency: "THB",
+                  }).format(shipping_amount)}
                 </p>
               </SelectItem>
             )
@@ -76,7 +79,12 @@ const ShippingRuleSelect = ({
         </SelectContent>
       </Select>
       <p className="pl-1 text-xs text-muted-foreground">
-        <b>TBH {shippingRule?.shipping_amount}</b>
+        <b>
+          {new Intl.NumberFormat("th-TH", {
+            style: "currency",
+            currency: "THB",
+          }).format(shippingRule?.shipping_amount)}
+        </b>
       </p>
     </div>
   );

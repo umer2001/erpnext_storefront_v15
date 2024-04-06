@@ -18,7 +18,7 @@ import { useNavigate } from "react-router-dom";
 type AddressCardProps = {
   name: string;
   phone?: string;
-  address_line1: string;
+  address_line1?: string;
   address_line2?: string;
   city?: string;
   country?: string;
@@ -39,9 +39,10 @@ const AddressCard = ({
   display,
 }: AddressCardProps) => {
   const navigate = useNavigate();
+
   return (
     <Card className="w-full overflow-hidden">
-      <CardHeader className="flex flex-row justify-between items-center text-gray-500">
+      <CardHeader className="flex flex-row justify-between items-center text-gray-500 pb-2">
         <CardTitle className="text-lg flex items-center">
           <MapPinned size={20} className="mr-2" /> {name}
         </CardTitle>

@@ -64,7 +64,13 @@ const Cart = () => {
             <div className="flex justify-between items-center text-lg font-medium">
               <h5>{t("Total")}</h5>
               <p>
-                {serverCart?.message.doc.price_list_currency} {cartTotal}
+                {typeof cartTotal === "string"
+                  ? cartTotal
+                  : new Intl.NumberFormat("th-TH", {
+                      style: "currency",
+                      currency:
+                        serverCart?.message.doc.price_list_currency ?? "THB",
+                    }).format(cartTotal)}
               </p>
             </div>
             <SheetClose asChild>

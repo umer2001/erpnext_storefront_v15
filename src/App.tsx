@@ -51,6 +51,9 @@ import Addresses from "./pages/account/Addresses";
 import Checkout from "./pages/checkout";
 import { ResetPassword } from "./pages/resetPassword";
 import LangSelect from "./components/LangSelect";
+import OrderList from "./pages/orders/list";
+import OrderDetail from "./pages/orders/show";
+import { PaymentProvider } from "./pages/checkout/Payment";
 
 const providerConfig = {
   url: import.meta.env.VITE_BACKEND_URL,
@@ -85,24 +88,12 @@ function App() {
             notificationProvider={notificationProvider}
             resources={[
               {
-                name: "blog_posts",
-                list: "/blog-posts",
-                create: "/blog-posts/create",
-                edit: "/blog-posts/edit/:id",
-                show: "/blog-posts/show/:id",
+                name: "products",
                 meta: {
-                  canDelete: true,
+                  dataProviderName: "storeProvider",
                 },
-              },
-              {
-                name: "categories",
-                list: "/categories",
-                create: "/categories/create",
-                edit: "/categories/edit/:id",
-                show: "/categories/show/:id",
-                meta: {
-                  canDelete: true,
-                },
+                list: "/",
+                show: "/product/:id",
               },
               {
                 name: "address",
@@ -114,19 +105,22 @@ function App() {
                 },
               },
               {
-                name: "products",
+                name: "orders",
+                list: "/account/orders",
+                show: "/account/orders/:id",
                 meta: {
                   dataProviderName: "storeProvider",
                 },
-                list: "/",
-                show: "/product/:id",
               },
               {
-                name: "products",
+                name: "blog_posts",
+                list: "/blog-posts",
+                create: "/blog-posts/create",
+                edit: "/blog-posts/edit/:id",
+                show: "/blog-posts/show/:id",
                 meta: {
-                  dataProviderName: "storeProvider",
+                  canDelete: true,
                 },
-                list: "/category/:categoryId",
               },
             ]}
             options={{
@@ -152,12 +146,9 @@ function App() {
                     }
                   >
                     <Route index element={<ProductList />} />
-                    <Route
-                      path="/category/:categoryId"
-                      element={<ProductList />}
-                    />
                     <Route path="/product/:id" element={<ProductShow />} />
                   </Route>
+
                   <Route
                     element={
                       <Authenticated
@@ -182,7 +173,10 @@ function App() {
                         <Route path=":id" element={<AddressEdit />} />
                         <Route path="new" element={<AddressCreate />} />
                       </Route>
-                      <Route path="orders" element={<h1>Orders</h1>} />
+                      <Route path="orders">
+                        <Route index element={<OrderList />} />
+                        <Route path=":id" element={<OrderDetail />} />
+                      </Route>
                     </Route>
                     <Route path="/blog-posts">
                       <Route index element={<BlogPostList />} />
@@ -190,18 +184,27 @@ function App() {
                       <Route path="edit/:id" element={<BlogPostEdit />} />
                       <Route path="show/:id" element={<BlogPostShow />} />R
                     </Route>
-                    <Route path="/categories">
-                      <Route index element={<CategoryList />} />
-                      <Route path="create" element={<CategoryCreate />} />
-                      <Route path="edit/:id" element={<CategoryEdit />} />
-                      <Route path="show/:id" element={<CategoryShow />} />
-                    </Route>
                     <Route path="/address">
                       <Route index element={<AddressList />} />
                       <Route path="create" element={<AddressCreate />} />
                       <Route path="edit/:id" element={<AddressEdit />} />
                     </Route>
                     <Route path="*" element={<ErrorComponent />} />
+                  </Route>
+                  <Route
+                    element={
+                      <Authenticated
+                        key="authenticated-outer"
+                        fallback={<CatchAllNavigate to="/login" />}
+                      >
+                        <Outlet />
+                      </Authenticated>
+                    }
+                  >
+                    <Route
+                      path="/checkout/payment"
+                      element={<PaymentProvider />}
+                    />
                   </Route>
                   <Route
                     element={

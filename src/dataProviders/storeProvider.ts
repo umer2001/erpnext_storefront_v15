@@ -7,7 +7,7 @@ import {
   UpdateParams,
   UpdateResponse,
 } from "@refinedev/core";
-import apis, { auth, cart } from "../client/api";
+import apis, { auth, cart, checkout } from "../client/api";
 import { transformArgs } from "./transformArgs";
 import { transformRes } from "./transformRes";
 
@@ -28,6 +28,7 @@ export const storeProvider: DataProvider = {
     // call api
     const res = await apis[resource as keyof typeof apis]?.list({
       start,
+      page_size: pagination?.pageSize,
       ...args,
     });
 
@@ -61,7 +62,8 @@ export const storeProvider: DataProvider = {
       apply_shipping_rule: cart.applyShippingRule,
       apply_coupon_code: cart.applyCouponCode,
       update_cart_address: cart.updateCartAddress,
-      place_order: cart.placeOrder,
+      payment_methods: checkout.getPaymentMethods,
+      confirm_payment: checkout.confirmPayment,
     };
     return await customMap[url as keyof typeof customMap]?.(payload);
   },

@@ -37,4 +37,30 @@ export const transformArgs: TransformArgs = {
       };
     },
   },
+  orders: {
+    list: (args: GetListParams) => {
+      const filters = args.filters?.reduce(
+        (acc: Record<string, any>, filter: CrudFilter | undefined) => {
+          if (filter && "field" in filter) {
+            const [filterCat, filterField] = (filter.field as string).split(
+              "."
+            );
+            if (filterCat == "filters") {
+              acc[filterCat] = JSON.stringify({ [filterField]: filter.value });
+            } else {
+              acc[filterCat] = filter.value;
+            }
+          }
+          return acc;
+        },
+        {
+          search: undefined,
+        } as Record<string, any>
+      );
+
+      return {
+        ...filters,
+      };
+    },
+  },
 };

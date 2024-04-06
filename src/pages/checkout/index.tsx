@@ -1,7 +1,7 @@
 import AddressCard from "@/components/AddressCard";
 import { Label } from "@/components/ui/label";
 import { useCart } from "@/hooks/useCart";
-import { useCustomMutation, useOne, useTranslate } from "@refinedev/core";
+import { useCreate, useCustom, useOne, useTranslate } from "@refinedev/core";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   CirclePlus,
@@ -13,12 +13,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import CheckoutItem from "@/components/checkout/CheckoutItem";
-import { useMemo } from "react";
+import { useState } from "react";
 import ShippingRuleSelect from "@/components/checkout/ShippingRuleSelect";
 import CouponCodeInput from "@/components/checkout/CouponCodeInput";
-import { useNavigate } from "react-router-dom";
+import { createSearchParams, useNavigate } from "react-router-dom";
+import useSummary from "@/hooks/useSummary";
+
+export const paymentMethodIconMap: { [key: string]: React.ReactNode } = {
+  "2": <Landmark className="mr-2 h-4 w-4" />,
+  "1": <QrCode className="mr-2 h-4 w-4" />,
+};
 
 const Checkout = () => {
+  const [paymentMethod, setpaymentMethod] = useState<string | null>(null);
   const t = useTranslate();
   const navigate = useNavigate();
   const { cart, serverCart, cartTotal, cartCount, resetCart } = useCart();
@@ -32,45 +39,32 @@ const Checkout = () => {
     },
   });
 
-  const { mutate, isLoading: placingOrder } = useCustomMutation({
+  const { data: paymentMethods } = useCustom({
+    dataProviderName: "storeProvider",
+    url: "payment_methods",
+    method: "get",
+  });
+
+  const { mutate, isLoading: placingOrder } = useCreate({
     mutationOptions: {
-      onSettled: () => {
+      onSettled: (data, err) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
         resetCart();
-        navigate("/account/orders");
+        navigate({
+          pathname: "/checkout/payment",
+          search: createSearchParams({
+            orderId: data?.message,
+            paymentMethod: paymentMethod ?? "",
+          }).toString(),
+        });
       },
     },
   });
 
-  const checkoutSummary = useMemo(() => {
-    if (serverCart && serverCart?.message.doc.shipping_rule) {
-      const totalShipping =
-        serverCart.message.doc.taxes.find(
-          ({ description }: any) =>
-            description === serverCart.message.doc.shipping_rule
-        )?.tax_amount ?? 0;
-      const totalTax = Math.max(
-        serverCart.message.doc.total_taxes_and_charges - totalShipping,
-        0
-      );
-      const total = typeof cartTotal === "string" ? 0 : cartTotal;
-      return {
-        totalTax,
-        totalShipping,
-        totalDiscount: !serverCart?.message.doc.grand_total
-          ? 0
-          : total +
-            totalTax +
-            totalShipping -
-            serverCart?.message.doc.grand_total +
-            serverCart?.message.doc.discount_amount,
-      };
-    }
-    return {
-      totalTax: 0,
-      totalShipping: 0,
-      totalDiscount: 0,
-    };
-  }, [serverCart]);
+  const checkoutSummary = useSummary(serverCart?.message.doc);
 
   return (
     <div className="py-7 px-4 flex flex-col gap-x-0 gap-y-8 md:flex-row md:gap-x-8">
@@ -79,7 +73,10 @@ const Checkout = () => {
           <div className="flex flex-col bg-secondary p-6 rounded-lg">
             <p className=" text-xs">{t("Grand total")}</p>
             <h2 className="text-2xl font-semibold text-primary">
-              THB {serverCart?.message.doc.grand_total}
+              {new Intl.NumberFormat("th-TH", {
+                style: "currency",
+                currency: "THB",
+              }).format(serverCart?.message.doc.grand_total)}
             </h2>
           </div>
           <div className="mt-6">
@@ -92,7 +89,13 @@ const Checkout = () => {
                   if (!quantity) {
                     return null;
                   }
-                  return <CheckoutItem key={itemCode} itemCode={itemCode} />;
+                  return (
+                    <CheckoutItem
+                      key={itemCode}
+                      itemCode={itemCode}
+                      qty={quantity}
+                    />
+                  );
                 })}
               </ul>
             </div>
@@ -100,7 +103,14 @@ const Checkout = () => {
             <div className="flex flex-col">
               <div className="w-full flex justify-between">
                 <p className="text-sm text-muted-foreground">{t("Subtotal")}</p>
-                <strong className="text-darkgray">THB {cartTotal}</strong>
+                <strong className="text-darkgray">
+                  {typeof cartTotal === "string"
+                    ? t("Loading...")
+                    : new Intl.NumberFormat("th-TH", {
+                        style: "currency",
+                        currency: "THB",
+                      }).format(cartTotal)}
+                </strong>
               </div>
               {checkoutSummary.totalShipping > 0 && (
                 <div className="w-full flex justify-between">
@@ -108,14 +118,20 @@ const Checkout = () => {
                     {t("Shipping Cost")}
                   </p>
                   <strong className="text-muted-foreground">
-                    THB {checkoutSummary.totalShipping}
+                    {new Intl.NumberFormat("th-TH", {
+                      style: "currency",
+                      currency: "THB",
+                    }).format(checkoutSummary.totalShipping)}
                   </strong>
                 </div>
               )}
               <div className="w-full flex justify-between">
                 <p className="text-sm text-muted-foreground">{t("Tax")}</p>
                 <strong className="text-muted-foreground">
-                  THB {checkoutSummary.totalTax}
+                  {new Intl.NumberFormat("th-TH", {
+                    style: "currency",
+                    currency: "THB",
+                  }).format(checkoutSummary.totalTax)}
                 </strong>
               </div>
               {checkoutSummary.totalDiscount > 0 && (
@@ -124,8 +140,10 @@ const Checkout = () => {
                     {t("Discount")}
                   </p>
                   <strong className="text-muted-foreground">
-                    THB{" "}
-                    {parseFloat(`${checkoutSummary.totalDiscount}`).toFixed(2)}
+                    {new Intl.NumberFormat("th-TH", {
+                      style: "currency",
+                      currency: "THB",
+                    }).format(checkoutSummary.totalDiscount?.toFixed(2) ?? 0)}
                   </strong>
                 </div>
               )}
@@ -147,7 +165,10 @@ const Checkout = () => {
                 {t("Grand total")}
               </p>
               <strong className="text-darkgray">
-                THB {serverCart?.message.doc.grand_total}
+                {new Intl.NumberFormat("th-TH", {
+                  style: "currency",
+                  currency: "THB",
+                }).format(serverCart?.message.doc.grand_total)}
               </strong>
             </div>
           </div>
@@ -186,35 +207,25 @@ const Checkout = () => {
               <RadioGroup
                 defaultValue="card"
                 className="grid grid-cols-2 gap-4"
+                onValueChange={(value) => setpaymentMethod(value)}
+                value={paymentMethod ?? ""}
               >
-                <div>
-                  <RadioGroupItem
-                    value="card"
-                    id="card"
-                    className="peer sr-only"
-                  />
-                  <Label
-                    htmlFor="card"
-                    className="flex items-center justify-start rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                  >
-                    <QrCode className="mr-2 h-4 w-4" />
-                    {t("QR PromptPay")}
-                  </Label>
-                </div>
-                <div>
-                  <RadioGroupItem
-                    value="paypal"
-                    id="paypal"
-                    className="peer sr-only"
-                  />
-                  <Label
-                    htmlFor="paypal"
-                    className="flex items-center justify-start rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                  >
-                    <Landmark className="mr-2 h-4 w-4" />
-                    {t("Pay via bank")}
-                  </Label>
-                </div>
+                {(paymentMethods?.message ?? [])?.map((method: any) => (
+                  <div>
+                    <RadioGroupItem
+                      value={method.name}
+                      id={method.key}
+                      className="peer sr-only"
+                    />
+                    <Label
+                      htmlFor={method.key}
+                      className="flex items-center justify-start rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                    >
+                      {paymentMethodIconMap[method.key ?? "2"]}
+                      {method.name}
+                    </Label>
+                  </div>
+                ))}
               </RadioGroup>
             </div>
             <div>
@@ -225,13 +236,8 @@ const Checkout = () => {
                 onClick={() =>
                   mutate({
                     dataProviderName: "storeProvider",
-                    method: "post",
-                    url: "place_order",
+                    resource: "orders",
                     values: {},
-                    successNotification: {
-                      message: t("Order placed successfully"),
-                      type: "success",
-                    },
                   })
                 }
               >

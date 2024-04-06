@@ -24,4 +24,12 @@ export const transformRes: TransformRes = {
       };
     },
   },
+  orders: {
+    list: (res) => {
+      return {
+        data: res?.message.orders,
+        total: res?.message?.count ?? 0,
+      };
+    },
+  },
 };
