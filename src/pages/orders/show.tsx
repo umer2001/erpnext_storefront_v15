@@ -1,24 +1,24 @@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useBack, useOne, useTranslate } from "@refinedev/core";
+import { useCustom, useOne, useTranslate } from "@refinedev/core";
 import { MessageCircleQuestion, Undo2 } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { createSearchParams, useNavigate, useParams } from "react-router-dom";
 import {
   Select,
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import AddressCard from "@/components/AddressCard";
 import CheckoutItem from "@/components/checkout/CheckoutItem";
 import { Separator } from "@/components/ui/separator";
-import { useMemo } from "react";
 import useSummary from "@/hooks/useSummary";
+import { useState } from "react";
 
 const OrderDetail = () => {
+  const [paymentMethod, setPaymentMethod] = useState();
   const t = useTranslate();
   const navigate = useNavigate();
   const params = useParams();
@@ -39,6 +39,17 @@ const OrderDetail = () => {
     id: order?.customer_address,
     queryOptions: {
       enabled: !!order?.customer_address,
+    },
+  });
+
+  const { data: paymentMethods } = useCustom({
+    dataProviderName: "storeProvider",
+    url: "payment_methods",
+    method: "get",
+    queryOptions: {
+      enabled:
+        order?.status && !["Completed", "Shipped"].includes(order.status),
+      onSuccess: (data: any) => setPaymentMethod(data.message[0].name),
     },
   });
 
@@ -90,23 +101,39 @@ const OrderDetail = () => {
           <span className="text-sm font-bold">{order.status}</span>
         </li>
       </ul>
-      {!["Completed", "Shipped"].includes(order.status) && (
+      {order?.status && !["Completed", "Shipped"].includes(order.status) && (
         <div className="mt-6">
           <Label>{t("Payment Method")}</Label>
           <div className="flex justify-between items-center mt-2">
-            <Select>
+            <Select
+              value={paymentMethod || paymentMethods.message[0].name}
+              onValueChange={(value) => setPaymentMethod(value)}
+            >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder={t("Select Payment Method")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectLabel>{t("Payment Methods")}</SelectLabel>
-                  <SelectItem value="apple">{t("QR PromptPay")}</SelectItem>
-                  <SelectItem value="banana">{t("Pay via bank")}</SelectItem>
+                  {paymentMethods.message.map(({ name }: { name: string }) => (
+                    <SelectItem value={name} key={name}>
+                      {name}
+                    </SelectItem>
+                  ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
-            <Button>
+            <Button
+              onClick={() => {
+                navigate({
+                  pathname: "/checkout/payment",
+                  search: createSearchParams({
+                    orderId: params.id as string,
+                    paymentMethod:
+                      paymentMethod ?? paymentMethods!.message[0].name,
+                  }).toString(),
+                });
+              }}
+            >
               <p>{t("Pay")}</p>
             </Button>
           </div>

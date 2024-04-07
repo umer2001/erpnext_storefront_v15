@@ -18,6 +18,17 @@ import ShippingRuleSelect from "@/components/checkout/ShippingRuleSelect";
 import CouponCodeInput from "@/components/checkout/CouponCodeInput";
 import { createSearchParams, useNavigate } from "react-router-dom";
 import useSummary from "@/hooks/useSummary";
+import { useForm } from "@refinedev/react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { checkoutSchema } from "./checkoutSchema";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 export const paymentMethodIconMap: { [key: string]: React.ReactNode } = {
   "2": <Landmark className="mr-2 h-4 w-4" />,
@@ -45,6 +56,16 @@ const Checkout = () => {
     method: "get",
   });
 
+  const form = useForm({
+    resolver: yupResolver(checkoutSchema),
+    defaultValues: {
+      paymentMethod: paymentMethod ?? "",
+      shippingRule: serverCart?.message.doc.shipping_rule,
+      address: serverCart?.message.doc.shipping_address_name,
+    },
+    mode: "onSubmit",
+  });
+
   const { mutate, isLoading: placingOrder } = useCreate({
     mutationOptions: {
       onSettled: (data, err) => {
@@ -57,7 +78,7 @@ const Checkout = () => {
           pathname: "/checkout/payment",
           search: createSearchParams({
             orderId: data?.message,
-            paymentMethod: paymentMethod ?? "",
+            paymentMethod: form.getValues("paymentMethod"),
           }).toString(),
         });
       },
@@ -65,6 +86,14 @@ const Checkout = () => {
   });
 
   const checkoutSummary = useSummary(serverCart?.message.doc);
+
+  const onSubmit = (data: any) => {
+    mutate({
+      dataProviderName: "storeProvider",
+      resource: "orders",
+      values: {},
+    });
+  };
 
   return (
     <div className="py-7 px-4 flex flex-col gap-x-0 gap-y-8 md:flex-row md:gap-x-8">
@@ -179,86 +208,100 @@ const Checkout = () => {
           <h2 className="font-semibold text-darkgray">
             {t("Shipping Information")}
           </h2>
-          <div className="mt-6 flex flex-col gap-y-4">
-            <Label>{t("Address")}</Label>
-            {addressLoading &&
-              !!serverCart?.message.doc.shipping_address_name && (
-                <div>Loading...</div>
-              )}
-            {address && <AddressCard {...address?.message} />}
-            {!address && (
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full px-6 justify-start text-lg text-gray-500"
-                onClick={() => navigate("/account/addresses/new")}
-              >
-                <CirclePlus className="mr-2" /> {t("Add Address")}
-              </Button>
-            )}
-            <ShippingRuleSelect
-              initialShippingRule={serverCart?.message.shipping_rules?.find(
-                ({ name }: { name: string }) =>
-                  name === serverCart?.message.doc.shipping_rule
-              )}
-            />
-            <div>
-              <Label htmlFor="pm">{t("Payment Method")}</Label>
-              <RadioGroup
-                defaultValue="card"
-                className="grid grid-cols-2 gap-4"
-                onValueChange={(value) => setpaymentMethod(value)}
-                value={paymentMethod ?? ""}
-              >
-                {(paymentMethods?.message ?? [])?.map((method: any) => (
-                  <div>
-                    <RadioGroupItem
-                      value={method.name}
-                      id={method.key}
-                      className="peer sr-only"
-                    />
-                    <Label
-                      htmlFor={method.key}
-                      className="flex items-center justify-start rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                    >
-                      {paymentMethodIconMap[method.key ?? "2"]}
-                      {method.name}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
-            <div>
-              <Button
-                size="lg"
-                className="w-full"
-                disabled={placingOrder || cartCount === 0}
-                onClick={() =>
-                  mutate({
-                    dataProviderName: "storeProvider",
-                    resource: "orders",
-                    values: {},
-                  })
-                }
-              >
-                {placingOrder && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Form {...form}>
+            <form
+              className="mt-6 flex flex-col gap-y-4"
+              onSubmit={form.handleSubmit(onSubmit)}
+            >
+              <Label>{t("Address")}</Label>
+              {addressLoading &&
+                !!serverCart?.message.doc.shipping_address_name && (
+                  <div>Loading...</div>
                 )}
-                {t("Continue to Payment")}
-              </Button>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {t("By continuing, you agree to our")}{" "}
-                <b>{t("Privacy Policy")}</b> {t("and")}{" "}
-                <b>{t("Terms of Service")}</b>.
-              </p>
-            </div>
-            <div className="w-full flex justify-center h-10 items-center">
-              <Button variant="link" className="font-bold">
-                <MessageCircleQuestion size={20} className="mr-1" />{" "}
-                {t("Ask for help")}
-              </Button>
-            </div>
-          </div>
+              {address && <AddressCard {...address?.message} />}
+              {!address && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full px-6 justify-start text-lg text-gray-500"
+                  onClick={() => navigate("/account/addresses/new")}
+                >
+                  <CirclePlus className="mr-2" /> {t("Add Address")}
+                </Button>
+              )}
+              <ShippingRuleSelect
+                initialShippingRule={serverCart?.message.shipping_rules?.find(
+                  ({ name }: { name: string }) =>
+                    name === serverCart?.message.doc.shipping_rule
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="paymentMethod"
+                render={({ field }) => {
+                  return (
+                    <FormItem>
+                      <FormLabel>{t("Payment Method")}</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          {...field}
+                          className="grid grid-cols-2 gap-4"
+                          onValueChange={(value) =>
+                            form.setValue("paymentMethod", value)
+                          }
+                        >
+                          {(paymentMethods?.message ?? [])?.map(
+                            (method: any) => (
+                              <div>
+                                <RadioGroupItem
+                                  value={method.name}
+                                  id={method.key}
+                                  className="peer sr-only"
+                                />
+                                <Label
+                                  htmlFor={method.key}
+                                  className="flex items-center justify-start rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                                >
+                                  {paymentMethodIconMap[method.key ?? "2"]}
+                                  {method.name}
+                                </Label>
+                              </div>
+                            )
+                          )}
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+
+              <div>
+                <Button
+                  size="lg"
+                  className="w-full"
+                  disabled={placingOrder || cartCount === 0}
+                  type="submit"
+                >
+                  {placingOrder && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  {t("Continue to Payment")}
+                </Button>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {t("By continuing, you agree to our")}{" "}
+                  <b>{t("Privacy Policy")}</b> {t("and")}{" "}
+                  <b>{t("Terms of Service")}</b>.
+                </p>
+              </div>
+              <div className="w-full flex justify-center h-10 items-center">
+                <Button variant="link" className="font-bold">
+                  <MessageCircleQuestion size={20} className="mr-1" />{" "}
+                  {t("Ask for help")}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </div>
       </div>
     </div>
